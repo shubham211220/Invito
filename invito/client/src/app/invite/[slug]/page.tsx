@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, useCallback, use } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import api from '@/lib/api';
 import { Invitation } from '@/types';
 import { formatDate, formatTime, getInviteUrl, copyToClipboard, getWhatsAppShareUrl } from '@/lib/utils';
@@ -102,11 +103,7 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
   const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
   const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
 
-  useEffect(() => {
-    fetchInvitation();
-  }, [slug]);
-
-  const fetchInvitation = async () => {
+  const fetchInvitation = useCallback(async () => {
     try {
       const res = await api.get(`/invite/${slug}`);
       setInvitation(res.data.data.invitation);
@@ -115,7 +112,11 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    fetchInvitation();
+  }, [fetchInvitation]);
 
   const handleRsvpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,7 +198,7 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
             {/* Cover Image */}
             {invitation.imageUrl && (
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} style={{ marginBottom: '2rem', borderRadius: '16px', overflow: 'hidden', border: `1px solid ${style.accent}20` }}>
-                <img src={`http://localhost:5000${invitation.imageUrl}`} alt="Event Cover" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover' }} />
+                <Image src={invitation.imageUrl.startsWith('http') ? invitation.imageUrl : `${process.env.NEXT_PUBLIC_API_URL}${invitation.imageUrl}`} alt="Event Cover" width={680} height={300} style={{ width: '100%', maxHeight: '300px', objectFit: 'cover' }} unoptimized />
               </motion.div>
             )}
 
