@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
@@ -224,7 +225,7 @@ export default function CreateInvitationPage({ params }: { params: Promise<{ tem
                       onClick={() => document.getElementById('image-upload')?.click()}
                     >
                       {imagePreview ? (
-                        <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+                        <Image src={imagePreview} alt="Preview" width={400} height={160} style={{ width: '100%', height: '160px', objectFit: 'cover' }} unoptimized />
                       ) : (
                         <>
                           <HiOutlinePhoto style={{ fontSize: '2rem', color: '#5c7cfa', marginBottom: '0.5rem' }} />

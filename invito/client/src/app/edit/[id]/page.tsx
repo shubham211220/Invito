@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
@@ -28,11 +28,7 @@ export default function EditInvitationPage({ params }: { params: Promise<{ id: s
     if (!isLoading && !isAuthenticated) router.push('/login');
   }, [isLoading, isAuthenticated, router]);
 
-  useEffect(() => {
-    if (isAuthenticated && id) fetchInvitation();
-  }, [isAuthenticated, id]);
-
-  const fetchInvitation = async () => {
+  const fetchInvitation = useCallback(async () => {
     try {
       const res = await api.get(`/invitations/${id}`);
       const inv = res.data.data.invitation;
@@ -50,7 +46,11 @@ export default function EditInvitationPage({ params }: { params: Promise<{ id: s
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, router]);
+
+  useEffect(() => {
+    if (isAuthenticated && id) fetchInvitation();
+  }, [isAuthenticated, id, fetchInvitation]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
