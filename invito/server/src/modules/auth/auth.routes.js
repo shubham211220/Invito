@@ -8,6 +8,7 @@ const auth = require('../../middleware/auth');
 // Public routes
 router.post('/register', registerValidation, validate, authController.register);
 router.post('/login', loginValidation, validate, authController.login);
+router.post('/google', authController.googleLogin);
 
 // Protected routes
 router.get('/me', auth, authController.getMe);

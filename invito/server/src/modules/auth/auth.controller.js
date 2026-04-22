@@ -29,6 +29,23 @@ class AuthController {
   }
 
   /**
+   * POST /api/auth/google
+   * Handles Google OAuth ID token verification and login/signup.
+   */
+  async googleLogin(req, res, next) {
+    try {
+      const { idToken } = req.body;
+      if (!idToken) {
+        return ApiResponse.error(res, 'Google ID token is required.', 400);
+      }
+      const { user, token } = await authService.googleLogin({ idToken });
+      return ApiResponse.success(res, { user, token }, 'Signed in with Google successfully!');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * GET /api/auth/me
    */
   async getMe(req, res, next) {

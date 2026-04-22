@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import { HiOutlineSparkles, HiOutlineEnvelope, HiOutlineLockClosed, HiOutlineUser, HiOutlineEye, HiOutlineEyeSlash } from 'react-icons/hi2';
+import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -15,7 +16,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,6 +44,16 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  const handleGoogleSuccess = useCallback(async (idToken: string) => {
+    try {
+      await googleLogin(idToken);
+      toast.success('Welcome to Invito! 🎉');
+      router.push('/dashboard');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Google sign-up failed');
+    }
+  }, [googleLogin, router]);
 
   return (
     <div
@@ -82,6 +93,18 @@ export default function RegisterPage() {
           <p style={{ color: '#868e96', textAlign: 'center', marginBottom: '2rem', fontSize: '0.9rem' }}>
             Start creating beautiful invitations
           </p>
+
+          {/* Google Login */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <GoogleLoginButton onSuccess={handleGoogleSuccess} label="Sign up with Google" />
+          </div>
+
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+            <span style={{ color: '#868e96', fontSize: '0.8rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>or</span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+          </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
             {/* Name */}

@@ -11,6 +11,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -34,23 +35,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await api.post('/auth/login', { email, password });
-    const { user: userData, token: authToken } = res.data.data;
+  const setAuth = useCallback((userData: User, authToken: string) => {
     setUser(userData);
     setToken(authToken);
     localStorage.setItem('invito_token', authToken);
     localStorage.setItem('invito_user', JSON.stringify(userData));
   }, []);
 
+  const login = useCallback(async (email: string, password: string) => {
+    const res = await api.post('/auth/login', { email, password });
+    const { user: userData, token: authToken } = res.data.data;
+    setAuth(userData, authToken);
+  }, [setAuth]);
+
   const register = useCallback(async (name: string, email: string, password: string) => {
     const res = await api.post('/auth/register', { name, email, password });
     const { user: userData, token: authToken } = res.data.data;
-    setUser(userData);
-    setToken(authToken);
-    localStorage.setItem('invito_token', authToken);
-    localStorage.setItem('invito_user', JSON.stringify(userData));
-  }, []);
+    setAuth(userData, authToken);
+  }, [setAuth]);
+
+  const googleLogin = useCallback(async (idToken: string) => {
+    const res = await api.post('/auth/google', { idToken });
+    const { user: userData, token: authToken } = res.data.data;
+    setAuth(userData, authToken);
+  }, [setAuth]);
 
   const logout = useCallback(() => {
     setUser(null);
@@ -60,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, register, googleLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );

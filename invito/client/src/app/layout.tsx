@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Playfair_Display, DM_Sans } from 'next/font/google';
+import { Inter, Playfair_Display, DM_Sans, Poppins } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -22,6 +22,13 @@ const dmSans = DM_Sans({
   display: 'swap',
 });
 
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Invito — Create Beautiful Digital Invitations',
   description:
@@ -31,7 +38,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable} ${dmSans.variable} ${poppins.variable}`}>
       <body>
         <AuthProvider>
           {children}

@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { templates } from '@/data/templates';
@@ -18,6 +18,11 @@ const fadeUp = {
 };
 
 export default function HomePage() {
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
   const features = [
     { icon: <HiOutlinePaintBrush />, title: 'Beautiful Templates', desc: 'Choose from stunning templates for weddings, birthdays, engagements, and more.' },
     { icon: <HiOutlineLink />, title: 'Unique Share Links', desc: 'Each invitation gets a unique URL that you can share anywhere instantly.' },
@@ -31,6 +36,7 @@ export default function HomePage() {
 
       {/* ─── Hero Section ──────────────────────────────────────── */}
       <section
+        ref={heroRef}
         style={{
           position: 'relative',
           minHeight: '100vh',
@@ -41,47 +47,51 @@ export default function HomePage() {
           padding: '6rem 1.5rem 4rem',
         }}
       >
-        {/* Animated background orbs */}
+        {/* Animated background orbs with parallax */}
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
-          <div
-            style={{
-              position: 'absolute',
-              width: '600px',
-              height: '600px',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(92,124,250,0.15), transparent 70%)',
-              top: '-10%',
-              right: '-15%',
-              animation: 'float 8s ease-in-out infinite',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              width: '500px',
-              height: '500px',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(240,101,149,0.12), transparent 70%)',
-              bottom: '-5%',
-              left: '-10%',
-              animation: 'float 10s ease-in-out infinite reverse',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              width: '300px',
-              height: '300px',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(252,196,25,0.08), transparent 70%)',
-              top: '40%',
-              left: '50%',
-              animation: 'float 7s ease-in-out infinite',
-            }}
-          />
+          <motion.div
+            style={{ y: heroY }}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                width: '700px',
+                height: '700px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(92,124,250,0.18), transparent 70%)',
+                top: '-10%',
+                right: '-15%',
+                animation: 'float 8s ease-in-out infinite',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                width: '600px',
+                height: '600px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(240,101,149,0.14), transparent 70%)',
+                bottom: '-5%',
+                left: '-10%',
+                animation: 'float 10s ease-in-out infinite reverse',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                width: '350px',
+                height: '350px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(252,196,25,0.1), transparent 70%)',
+                top: '40%',
+                left: '50%',
+                animation: 'float 7s ease-in-out infinite',
+              }}
+            />
+          </motion.div>
         </div>
 
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: '800px' }}>
+        <motion.div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: '800px', opacity: heroOpacity }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <span
               style={{
@@ -140,14 +150,18 @@ export default function HomePage() {
             transition={{ duration: 0.7, delay: 0.3 }}
             style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}
           >
-            <Link href="/register" className="btn-primary" style={{ padding: '0.9rem 2.5rem', fontSize: '1.05rem' }}>
-              Start Creating — It&apos;s Free
-            </Link>
-            <Link href="#templates" className="btn-secondary" style={{ padding: '0.9rem 2.5rem', fontSize: '1.05rem' }}>
-              Browse Templates
-            </Link>
+            <motion.div whileHover={{ scale: 1.03, boxShadow: '0 0 40px rgba(76,110,245,0.3)' }} whileTap={{ scale: 0.98 }}>
+              <Link href="/register" className="btn-primary" style={{ padding: '0.9rem 2.5rem', fontSize: '1.05rem' }}>
+                Start Creating — It&apos;s Free
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+              <Link href="#templates" className="btn-secondary" style={{ padding: '0.9rem 2.5rem', fontSize: '1.05rem' }}>
+                Browse Templates
+              </Link>
+            </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ─── Features Section ──────────────────────────────────── */}
@@ -187,8 +201,13 @@ export default function HomePage() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
+                whileHover={{
+                  y: -8,
+                  boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+                  borderColor: 'rgba(255,255,255,0.15)',
+                }}
                 className="card"
-                style={{ textAlign: 'center', padding: '2.5rem 2rem' }}
+                style={{ textAlign: 'center', padding: '2.5rem 2rem', cursor: 'default' }}
               >
                 <div
                   style={{
@@ -252,12 +271,19 @@ export default function HomePage() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
+                whileHover={{
+                  y: -8,
+                  rotateY: 2,
+                  rotateX: -2,
+                  boxShadow: '0 30px 60px rgba(0,0,0,0.4)',
+                }}
                 style={{
                   borderRadius: '16px',
                   overflow: 'hidden',
                   border: '1px solid rgba(255,255,255,0.06)',
-                  transition: 'all 0.3s ease',
+                  transition: 'border-color 0.3s ease',
                   cursor: 'pointer',
+                  perspective: '1000px',
                 }}
               >
                 <div
@@ -271,7 +297,12 @@ export default function HomePage() {
                     position: 'relative',
                   }}
                 >
-                  <span style={{ filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.3))' }}>{template.icon}</span>
+                  <motion.span
+                    whileHover={{ scale: 1.2, rotate: 10 }}
+                    style={{ filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.3))' }}
+                  >
+                    {template.icon}
+                  </motion.span>
                   <span
                     style={{
                       position: 'absolute',
@@ -285,6 +316,7 @@ export default function HomePage() {
                       padding: '0.25rem 0.75rem',
                       borderRadius: '100px',
                       color: '#dee2e6',
+                      backdropFilter: 'blur(10px)',
                     }}
                   >
                     {template.category}
@@ -299,31 +331,52 @@ export default function HomePage() {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-            <Link href="/register" className="btn-primary" style={{ padding: '0.9rem 2.5rem', fontSize: '1.05rem' }}>
-              Start Creating Your Invitation
-            </Link>
+            <motion.div whileHover={{ scale: 1.03, boxShadow: '0 0 40px rgba(76,110,245,0.3)' }} whileTap={{ scale: 0.98 }}>
+              <Link href="/register" className="btn-primary" style={{ padding: '0.9rem 2.5rem', fontSize: '1.05rem' }}>
+                Start Creating Your Invitation
+              </Link>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* ─── CTA Section ───────────────────────────────────────── */}
       <section style={{ padding: '6rem 1.5rem' }}>
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
           style={{
             maxWidth: '900px',
             margin: '0 auto',
             textAlign: 'center',
             padding: '4rem 2rem',
-            borderRadius: '24px',
+            borderRadius: '28px',
             background: 'linear-gradient(135deg, rgba(92,124,250,0.08), rgba(240,101,149,0.08))',
             border: '1px solid rgba(255,255,255,0.06)',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Decorative glow */}
+          <div style={{
+            position: 'absolute',
+            top: '-50%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '400px',
+            height: '400px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(92,124,250,0.1), transparent 60%)',
+            pointerEvents: 'none',
+          }} />
+
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            style={{ fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 800, marginBottom: '1rem' }}
+            style={{ fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 800, marginBottom: '1rem', position: 'relative' }}
           >
             Ready to Create Something <span className="gradient-text">Beautiful</span>?
           </motion.h2>
@@ -332,14 +385,16 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            style={{ color: '#868e96', fontSize: '1.1rem', marginBottom: '2rem', maxWidth: '500px', margin: '0 auto 2rem' }}
+            style={{ color: '#868e96', fontSize: '1.1rem', marginBottom: '2rem', maxWidth: '500px', margin: '0 auto 2rem', position: 'relative' }}
           >
             Join thousands who are creating memorable invitations. Completely free.
           </motion.p>
-          <Link href="/register" className="btn-primary" style={{ padding: '1rem 3rem', fontSize: '1.1rem' }}>
-            Get Started Now
-          </Link>
-        </div>
+          <motion.div whileHover={{ scale: 1.03, boxShadow: '0 0 40px rgba(76,110,245,0.3)' }} whileTap={{ scale: 0.98 }} style={{ position: 'relative' }}>
+            <Link href="/register" className="btn-primary" style={{ padding: '1rem 3rem', fontSize: '1.1rem' }}>
+              Get Started Now
+            </Link>
+          </motion.div>
+        </motion.div>
       </section>
 
       <Footer />
