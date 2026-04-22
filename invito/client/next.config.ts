@@ -9,15 +9,12 @@ const nextConfig: NextConfig = {
         port: "5000",
         pathname: "/uploads/**",
       },
-    ],
-  },
-  async rewrites() {
-    return [
       {
-        source: "/api/:path*",
-        destination: "http://localhost:5000/api/:path*",
+        protocol: "https",
+        hostname: "**",
+        pathname: "/uploads/**",
       },
-    ];
+    ],
   },
 };
 
