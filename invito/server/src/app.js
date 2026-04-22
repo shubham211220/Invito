@@ -21,7 +21,26 @@ const app = express();
 // ─── Security & Parsing ──────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({
-  origin: env.CLIENT_URL,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+
+    // Strip trailing slashes for comparison
+    const cleanOrigin = origin.replace(/\/+$/, '');
+
+    // Support comma-separated CLIENT_URL for multiple origins
+    const allowedOrigins = env.CLIENT_URL.split(',').map(o => o.trim().replace(/\/+$/, ''));
+    if (allowedOrigins.includes(cleanOrigin)) {
+      return callback(null, true);
+    }
+
+    // Also allow any Vercel preview deployment URLs
+    if (cleanOrigin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
