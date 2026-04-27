@@ -374,11 +374,19 @@ export default function Navbar() {
       {mobileOpen && (
         <div
           style={{
-            padding: '1rem 0 1.5rem',
+            padding: '1rem 1.5rem 1.5rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.75rem',
             borderTop: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(10, 10, 15, 0.98)',
+            backdropFilter: 'blur(24px)',
+            position: 'absolute',
+            top: '70px',
+            left: 0,
+            right: 0,
+            zIndex: 99,
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
           }}
         >
           {isAuthenticated ? (

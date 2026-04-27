@@ -82,48 +82,36 @@ export default function AdminDashboardPage() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
       
-      <div style={{ flex: 1, display: 'flex', paddingTop: '70px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
-        {/* Sidebar */}
-        <aside style={{ width: '250px', borderRight: '1px solid rgba(255,255,255,0.06)', padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <h2 style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', color: '#868e96', marginBottom: '1rem', paddingLeft: '0.5rem' }}>
+      <div className="admin-layout">
+        {/* Sidebar (desktop) / Tab bar (mobile) */}
+        <aside className="admin-sidebar">
+          <h2 className="admin-sidebar-title">
             Admin Console
           </h2>
-          {[
-            { id: 'overview', label: 'Overview', icon: <HiOutlineStar /> },
-            { id: 'users', label: 'Users', icon: <HiOutlineUsers /> },
-            { id: 'invitations', label: 'Invitations', icon: <HiOutlineEnvelope /> },
-            { id: 'payments', label: 'Payments', icon: <HiOutlineCurrencyDollar /> },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabType)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                border: 'none',
-                background: activeTab === tab.id ? 'rgba(240,101,149,0.1)' : 'transparent',
-                color: activeTab === tab.id ? '#f06595' : '#adb5bd',
-                fontSize: '0.95rem',
-                fontWeight: activeTab === tab.id ? 600 : 400,
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.2s',
-              }}
-            >
-              <span style={{ fontSize: '1.2rem' }}>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+          <div className="admin-tabs">
+            {[
+              { id: 'overview', label: 'Overview', icon: <HiOutlineStar /> },
+              { id: 'users', label: 'Users', icon: <HiOutlineUsers /> },
+              { id: 'invitations', label: 'Invitations', icon: <HiOutlineEnvelope /> },
+              { id: 'payments', label: 'Payments', icon: <HiOutlineCurrencyDollar /> },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={`admin-tab ${activeTab === tab.id ? 'admin-tab-active' : ''}`}
+              >
+                <span style={{ fontSize: '1.2rem' }}>{tab.icon}</span>
+                <span className="admin-tab-label">{tab.label}</span>
+              </button>
+            ))}
+          </div>
         </aside>
 
         {/* Main Content */}
-        <main style={{ flex: 1, padding: '2rem 3rem', overflowY: 'auto' }}>
+        <main className="admin-main">
           
-          <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#f1f3f5' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f1f3f5' }}>
               {activeTab === 'overview' && 'Dashboard Overview'}
               {activeTab === 'users' && 'User Management'}
               {activeTab === 'invitations' && 'All Invitations'}
@@ -133,7 +121,7 @@ export default function AdminDashboardPage() {
 
           {/* OVERVIEW TAB */}
           {activeTab === 'overview' && stats && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
               <div className="card">
                 <div style={{ color: '#5c7cfa', fontSize: '1.5rem', marginBottom: '0.5rem' }}><HiOutlineUsers /></div>
                 <h3 style={{ fontSize: '2rem', fontWeight: 800 }}>{stats.totalUsers}</h3>
@@ -159,29 +147,29 @@ export default function AdminDashboardPage() {
 
           {/* USERS TAB */}
           {activeTab === 'users' && (
-            <div className="card" style={{ padding: '1rem' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+            <div className="card" style={{ padding: '0.5rem', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: '600px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left', color: '#adb5bd' }}>
-                    <th style={{ padding: '1rem' }}>Name</th>
-                    <th style={{ padding: '1rem' }}>Email</th>
-                    <th style={{ padding: '1rem' }}>Role</th>
-                    <th style={{ padding: '1rem' }}>Plan</th>
-                    <th style={{ padding: '1rem' }}>Joined</th>
+                    <th style={{ padding: '0.85rem' }}>Name</th>
+                    <th style={{ padding: '0.85rem' }}>Email</th>
+                    <th style={{ padding: '0.85rem' }}>Role</th>
+                    <th style={{ padding: '0.85rem' }}>Plan</th>
+                    <th style={{ padding: '0.85rem' }}>Joined</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map(u => (
                     <tr key={u._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '1rem', color: '#f1f3f5' }}>{u.name}</td>
-                      <td style={{ padding: '1rem', color: '#868e96' }}>{u.email}</td>
-                      <td style={{ padding: '1rem' }}>
+                      <td style={{ padding: '0.85rem', color: '#f1f3f5' }}>{u.name}</td>
+                      <td style={{ padding: '0.85rem', color: '#868e96' }}>{u.email}</td>
+                      <td style={{ padding: '0.85rem' }}>
                         <span className={u.role === 'admin' ? 'badge badge-primary' : 'badge badge-secondary'}>{u.role}</span>
                       </td>
-                      <td style={{ padding: '1rem' }}>
+                      <td style={{ padding: '0.85rem' }}>
                         {u.plan === 'premium' ? <span style={{ color: '#f59e0b', fontWeight: 600 }}>👑 Premium</span> : <span style={{ color: '#868e96' }}>Free</span>}
                       </td>
-                      <td style={{ padding: '1rem', color: '#868e96' }}>{formatDate(u.createdAt)}</td>
+                      <td style={{ padding: '0.85rem', color: '#868e96' }}>{formatDate(u.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -191,25 +179,25 @@ export default function AdminDashboardPage() {
 
           {/* INVITATIONS TAB */}
           {activeTab === 'invitations' && (
-            <div className="card" style={{ padding: '1rem' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+            <div className="card" style={{ padding: '0.5rem', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: '600px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left', color: '#adb5bd' }}>
-                    <th style={{ padding: '1rem' }}>Title</th>
-                    <th style={{ padding: '1rem' }}>Creator</th>
-                    <th style={{ padding: '1rem' }}>Template</th>
-                    <th style={{ padding: '1rem' }}>RSVPs</th>
-                    <th style={{ padding: '1rem' }}>Created At</th>
+                    <th style={{ padding: '0.85rem' }}>Title</th>
+                    <th style={{ padding: '0.85rem' }}>Creator</th>
+                    <th style={{ padding: '0.85rem' }}>Template</th>
+                    <th style={{ padding: '0.85rem' }}>RSVPs</th>
+                    <th style={{ padding: '0.85rem' }}>Created At</th>
                   </tr>
                 </thead>
                 <tbody>
                   {invitations.map(i => (
                     <tr key={i._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '1rem', color: '#f1f3f5', fontWeight: 500 }}>{i.title}</td>
-                      <td style={{ padding: '1rem', color: '#868e96' }}>{i.userId?.email || 'Unknown'}</td>
-                      <td style={{ padding: '1rem' }}><span className="badge badge-secondary">{i.templateId}</span></td>
-                      <td style={{ padding: '1rem', color: '#868e96' }}>{i.rsvpCount || 0}</td>
-                      <td style={{ padding: '1rem', color: '#868e96' }}>{formatDate(i.createdAt)}</td>
+                      <td style={{ padding: '0.85rem', color: '#f1f3f5', fontWeight: 500 }}>{i.title}</td>
+                      <td style={{ padding: '0.85rem', color: '#868e96' }}>{i.userId?.email || 'Unknown'}</td>
+                      <td style={{ padding: '0.85rem' }}><span className="badge badge-secondary">{i.templateId}</span></td>
+                      <td style={{ padding: '0.85rem', color: '#868e96' }}>{i.rsvpCount || 0}</td>
+                      <td style={{ padding: '0.85rem', color: '#868e96' }}>{formatDate(i.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -219,23 +207,23 @@ export default function AdminDashboardPage() {
 
           {/* PAYMENTS TAB */}
           {activeTab === 'payments' && (
-            <div className="card" style={{ padding: '1rem' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+            <div className="card" style={{ padding: '0.5rem', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', minWidth: '500px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left', color: '#adb5bd' }}>
-                    <th style={{ padding: '1rem' }}>User Email</th>
-                    <th style={{ padding: '1rem' }}>Payment ID</th>
-                    <th style={{ padding: '1rem' }}>Order ID</th>
-                    <th style={{ padding: '1rem' }}>Expiry Date</th>
+                    <th style={{ padding: '0.85rem' }}>User Email</th>
+                    <th style={{ padding: '0.85rem' }}>Payment ID</th>
+                    <th style={{ padding: '0.85rem' }}>Order ID</th>
+                    <th style={{ padding: '0.85rem' }}>Expiry Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {payments.map(p => (
                     <tr key={p._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '1rem', color: '#f1f3f5' }}>{p.email}</td>
-                      <td style={{ padding: '1rem', fontFamily: 'monospace', color: '#5c7cfa' }}>{p.paymentId}</td>
-                      <td style={{ padding: '1rem', fontFamily: 'monospace', color: '#868e96' }}>{p.orderId}</td>
-                      <td style={{ padding: '1rem', color: '#868e96' }}>{p.planExpiresAt ? formatDate(p.planExpiresAt) : 'N/A'}</td>
+                      <td style={{ padding: '0.85rem', color: '#f1f3f5' }}>{p.email}</td>
+                      <td style={{ padding: '0.85rem', fontFamily: 'monospace', color: '#5c7cfa', fontSize: '0.78rem' }}>{p.paymentId}</td>
+                      <td style={{ padding: '0.85rem', fontFamily: 'monospace', color: '#868e96', fontSize: '0.78rem' }}>{p.orderId}</td>
+                      <td style={{ padding: '0.85rem', color: '#868e96' }}>{p.planExpiresAt ? formatDate(p.planExpiresAt) : 'N/A'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -245,6 +233,124 @@ export default function AdminDashboardPage() {
 
         </main>
       </div>
+
+      <style jsx>{`
+        .admin-layout {
+          flex: 1;
+          display: flex;
+          flex-direction: row;
+          padding-top: 70px;
+          max-width: 1440px;
+          margin: 0 auto;
+          width: 100%;
+        }
+
+        .admin-sidebar {
+          width: 250px;
+          border-right: 1px solid rgba(255,255,255,0.06);
+          padding: 2rem 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          flex-shrink: 0;
+        }
+
+        .admin-sidebar-title {
+          font-size: 0.8rem;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #868e96;
+          margin-bottom: 1rem;
+          padding-left: 0.5rem;
+        }
+
+        .admin-tabs {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .admin-tab {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          border: none;
+          background: transparent;
+          color: #adb5bd;
+          font-size: 0.95rem;
+          font-weight: 400;
+          cursor: pointer;
+          text-align: left;
+          transition: all 0.2s;
+          font-family: inherit;
+          white-space: nowrap;
+        }
+
+        .admin-tab-active {
+          background: rgba(240,101,149,0.1);
+          color: #f06595;
+          font-weight: 600;
+        }
+
+        .admin-tab-label {
+          display: inline;
+        }
+
+        .admin-main {
+          flex: 1;
+          padding: 2rem 3rem;
+          overflow-y: auto;
+          min-width: 0;
+        }
+
+        @media (max-width: 768px) {
+          .admin-layout {
+            flex-direction: column;
+          }
+
+          .admin-sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 1rem;
+            gap: 0;
+          }
+
+          .admin-sidebar-title {
+            display: none;
+          }
+
+          .admin-tabs {
+            flex-direction: row;
+            overflow-x: auto;
+            gap: 0.35rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+
+          .admin-tabs::-webkit-scrollbar {
+            display: none;
+          }
+
+          .admin-tab {
+            padding: 0.6rem 1rem;
+            font-size: 0.82rem;
+            border-radius: 20px;
+            gap: 0.4rem;
+            flex-shrink: 0;
+          }
+
+          .admin-tab-active {
+            background: rgba(240,101,149,0.15);
+          }
+
+          .admin-main {
+            padding: 1.25rem 1rem;
+          }
+        }
+      `}</style>
     </div>
   );
 }
