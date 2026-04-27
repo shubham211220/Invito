@@ -359,44 +359,101 @@ export default function ScratchCardReveal({
             A special moment awaits you
           </p>
 
-          {/* Scratch hint with shimmer */}
-          <AnimatePresence>
-            {showHint && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="scratch-hint"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.6rem 1.5rem',
-                  borderRadius: '100px',
-                  background: `${accentColor}12`,
-                  border: `1px solid ${accentColor}25`,
-                  color: accentColor,
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '1.5rem',
-                }}
-              >
-                <motion.span
-                  animate={{ x: [0, 5, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  ✨
-                </motion.span>
-                Scratch to reveal
-                <motion.span
-                  animate={{ x: [0, -5, 5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  ✨
-                </motion.span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+         {/* Scratch hint with shimmer */}
+<AnimatePresence>
+  {showHint && (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.75rem',
+        marginBottom: '1.5rem',
+      }}
+    >
+      {/* Big finger/hand icon bouncing */}
+      <motion.div
+        animate={{ y: [0, -10, 0], rotate: [-10, 10, -10] }}
+        transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ fontSize: '2.5rem', lineHeight: 1 }}
+      >
+        👆
+      </motion.div>
+
+      {/* Main instruction text — big and bold */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.35rem',
+      }}>
+        <span style={{
+          fontSize: '1.3rem',
+          fontWeight: 800,
+          color: accentColor,
+          letterSpacing: '-0.01em',
+        }}>
+          Scratch Here!
+        </span>
+        <span style={{
+          fontSize: '0.85rem',
+          color: 'rgba(255,255,255,0.5)',
+          fontWeight: 500,
+        }}>
+          Use your finger or mouse to reveal
+        </span>
+      </div>
+
+      {/* Animated scratch lines to indicate gesture */}
+      <motion.div
+        style={{
+          display: 'flex',
+          gap: '4px',
+          alignItems: 'center',
+        }}
+      >
+        {[0, 1, 2, 3, 4].map((i) => (
+          <motion.div
+            key={i}
+            animate={{ scaleX: [0.5, 1.2, 0.5], opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}
+            style={{
+              width: '20px',
+              height: '3px',
+              borderRadius: '2px',
+              background: accentColor,
+            }}
+          />
+        ))}
+      </motion.div>
+
+      {/* Pill badge */}
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.5rem 1.25rem',
+        borderRadius: '100px',
+        background: `${accentColor}15`,
+        border: `1px solid ${accentColor}30`,
+        color: accentColor,
+        fontSize: '0.8rem',
+        fontWeight: 600,
+      }}>
+        <motion.span
+          animate={{ rotate: [0, 20, -20, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          🎁
+        </motion.span>
+        Your invitation is hidden inside!
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
           {/* Decorative rings */}
           <div style={{ position: 'relative', width: '130px', height: '130px', margin: '0 auto' }}>

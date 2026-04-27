@@ -67,6 +67,23 @@ const invitationSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    userPlan: {
+      type: String,
+      enum: ['free', 'premium'],
+      default: 'free',
+    },
+    galleryImages: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: function(v) { return v.length <= 10; },
+        message: 'Maximum 10 gallery images allowed',
+      },
+    },
+    musicUrl: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: true,

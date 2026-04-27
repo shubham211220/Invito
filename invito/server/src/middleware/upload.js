@@ -1,18 +1,7 @@
 const multer = require('multer');
-const path = require('path');
-const env = require('../config/env');
 
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, env.UPLOAD_DIR);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  },
-});
+// Use memory storage — files stay in buffer only long enough to stream to Cloudinary
+const storage = multer.memoryStorage();
 
 // File filter — only images
 const fileFilter = (req, file, cb) => {

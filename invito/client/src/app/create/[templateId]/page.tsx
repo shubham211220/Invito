@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { getTemplateById } from '@/data/templates';
 import toast from 'react-hot-toast';
+import { useFeatureGate } from '@/hooks/useFeatureGate';
 import Navbar from '@/components/layout/Navbar';
 import {
   HiOutlineCalendarDays, HiOutlineMapPin, HiOutlinePhoto,
@@ -33,9 +34,10 @@ export default function CreateInvitationPage({ params }: { params: Promise<{ tem
     dressCode: '',
     contactInfo: '',
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { isPremium } = useFeatureGate();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.push('/login');
@@ -61,16 +63,48 @@ export default function CreateInvitationPage({ params }: { params: Promise<{ tem
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image must be under 5MB');
-        return;
-      }
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
+    const maxFiles = isPremium ? 10 : 1;
+    if (uploadedImageUrls.length + files.length > maxFiles) {
+      toast.error(`You can only upload up to ${maxFiles} image(s) on your current plan.`);
+      return;
     }
+
+    const validFiles = files.filter(f => {
+      if (f.size > 5 * 1024 * 1024) {
+        toast.error(`${f.name} exceeds 5MB limit`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    setUploadingImage(true);
+    try {
+      const newUrls: string[] = [];
+      for (const file of validFiles) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('image', file);
+        const uploadRes = await api.post('/upload-image', formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        newUrls.push(uploadRes.data.data.imageUrl);
+      }
+      setUploadedImageUrls(prev => [...prev, ...newUrls]);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImageUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,23 +116,20 @@ export default function CreateInvitationPage({ params }: { params: Promise<{ tem
     setSubmitting(true);
 
     try {
-      let imageUrl = '';
+      let mainImageUrl = '';
+      const galleryImageUrls: string[] = [];
 
-      // Upload image first if selected
-      if (imageFile) {
-        const formDataUpload = new FormData();
-        formDataUpload.append('image', imageFile);
-        const uploadRes = await api.post('/upload', formDataUpload, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        imageUrl = uploadRes.data.data.imageUrl;
+      if (uploadedImageUrls.length > 0) {
+        mainImageUrl = uploadedImageUrls[0];
+        galleryImageUrls.push(...uploadedImageUrls.slice(1));
       }
 
       // Create invitation
       const res = await api.post('/invitations', {
         ...formData,
         templateId,
-        imageUrl,
+        imageUrl: mainImageUrl,
+        galleryImages: galleryImageUrls,
       });
 
       toast.success('Invitation created! 🎉');
@@ -210,30 +241,71 @@ export default function CreateInvitationPage({ params }: { params: Promise<{ tem
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
                   {/* Image Upload */}
                   <div>
-                    <label className="input-label">Cover Image</label>
-                    <div
-                      style={{
-                        border: '2px dashed rgba(255,255,255,0.1)',
-                        borderRadius: '12px',
-                        padding: imagePreview ? '0' : '2rem',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.3s',
-                        overflow: 'hidden',
-                        position: 'relative',
-                      }}
-                      onClick={() => document.getElementById('image-upload')?.click()}
-                    >
-                      {imagePreview ? (
-                        <Image src={imagePreview} alt="Preview" width={400} height={160} style={{ width: '100%', height: '160px', objectFit: 'cover' }} unoptimized />
-                      ) : (
-                        <>
-                          <HiOutlinePhoto style={{ fontSize: '2rem', color: '#5c7cfa', marginBottom: '0.5rem' }} />
-                          <p style={{ color: '#868e96', fontSize: '0.85rem' }}>Click to upload (max 5MB)</p>
-                        </>
-                      )}
-                      <input id="image-upload" type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <label className="input-label" style={{ marginBottom: 0 }}>Images</label>
+                      <span style={{ fontSize: '0.75rem', color: '#868e96' }}>
+                        {uploadedImageUrls.length} / {isPremium ? 10 : 1} selected
+                      </span>
                     </div>
+                    
+                    {/* Previews grid */}
+                    {uploadedImageUrls.length > 0 && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
+                        {uploadedImageUrls.map((src, i) => (
+                          <div key={i} style={{ position: 'relative', height: '100px', borderRadius: '8px', overflow: 'hidden' }}>
+                            <Image src={src} alt={`Preview ${i}`} fill style={{ objectFit: 'cover' }} unoptimized />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(i)}
+                              style={{
+                                position: 'absolute', top: '4px', right: '4px',
+                                background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff',
+                                width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem'
+                              }}
+                            >
+                              ✕
+                            </button>
+                            {i === 0 && (
+                              <div style={{
+                                position: 'absolute', bottom: 0, left: 0, right: 0,
+                                background: 'rgba(92,124,250,0.8)', color: '#fff', fontSize: '0.6rem',
+                                textAlign: 'center', padding: '2px 0', fontWeight: 600
+                              }}>Cover</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {uploadedImageUrls.length < (isPremium ? 10 : 1) && (
+                      <div
+                        style={{
+                          border: '2px dashed rgba(255,255,255,0.1)',
+                          borderRadius: '12px',
+                          padding: '2rem',
+                          textAlign: 'center',
+                          cursor: uploadingImage ? 'default' : 'pointer',
+                          transition: 'border-color 0.3s',
+                          opacity: uploadingImage ? 0.5 : 1,
+                        }}
+                        onClick={() => !uploadingImage && document.getElementById('image-upload')?.click()}
+                      >
+                        <HiOutlinePhoto style={{ fontSize: '2rem', color: '#5c7cfa', marginBottom: '0.5rem' }} />
+                        <p style={{ color: '#868e96', fontSize: '0.85rem' }}>
+                          {uploadingImage ? 'Uploading...' : `Click to upload ${isPremium ? 'images (max 10)' : 'cover image'}`}
+                        </p>
+                        <input 
+                          id="image-upload" 
+                          type="file" 
+                          accept="image/*" 
+                          multiple={isPremium} 
+                          onChange={handleImageChange} 
+                          disabled={uploadingImage}
+                          style={{ display: 'none' }} 
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div>

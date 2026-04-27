@@ -12,22 +12,35 @@ interface MusicPlayerProps {
   accentColor?: string;
   /** If true, hides the button until showPlayer() is called (controlled by parent) */
   hidden?: boolean;
+  trackUrl?: string;
+  category?: string;
 }
 
-const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
-  ({ accentColor = '#d4a574', hidden = false }, ref) => {
-    const [playing, setPlaying] = useState(false);
-    const [visible, setVisible] = useState(!hidden);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+const defaultTracks: Record<string, string> = {
+  wedding: 'https://cdn.pixabay.com/audio/2022/03/15/audio_79bfb2c45e.mp3', // Romantic piano
+  birthday: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3', // Upbeat pop
+  party: 'https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c7443c.mp3', // Electronic dance
+  engagement: 'https://cdn.pixabay.com/audio/2022/02/07/audio_d214ed0952.mp3', // Acoustic love
+  corporate: 'https://cdn.pixabay.com/audio/2021/11/25/audio_91b32e02f9.mp3', // Ambient corporate
+  default: 'https://cdn.pixabay.com/audio/2024/11/29/audio_8b0152cac9.mp3', // Chill ambient
+};
 
-    useEffect(() => {
-      const audio = new Audio();
-      audio.loop = true;
-      audio.volume = 0;
-      audio.preload = 'auto';
-      audio.crossOrigin = 'anonymous';
-      audio.src = 'https://cdn.pixabay.com/audio/2024/11/29/audio_8b0152cac9.mp3';
+    const MusicPlayer = forwardRef<MusicPlayerRef, MusicPlayerProps>(
+      ({ accentColor = '#d4a574', hidden = false, trackUrl, category }, ref) => {
+        const [playing, setPlaying] = useState(false);
+        const [visible, setVisible] = useState(!hidden);
+        const audioRef = useRef<HTMLAudioElement | null>(null);
+        const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+        useEffect(() => {
+          const audio = new Audio();
+          audio.loop = true;
+          audio.volume = 0;
+          audio.preload = 'auto';
+          audio.crossOrigin = 'anonymous';
+
+          const src = trackUrl || (category ? defaultTracks[category] : null) || defaultTracks.default;
+          audio.src = src;
       audioRef.current = audio;
 
       return () => {

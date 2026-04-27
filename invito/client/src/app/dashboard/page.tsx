@@ -3,19 +3,23 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { useFeatureGate } from '@/hooks/useFeatureGate';
 import api from '@/lib/api';
 import { Invitation, DashboardStats } from '@/types';
 import { formatDate, getInviteUrl, copyToClipboard, getWhatsAppShareUrl, getTimeUntilEvent } from '@/lib/utils';
 import { getTemplateById } from '@/data/templates';
 import toast from 'react-hot-toast';
 import Navbar from '@/components/layout/Navbar';
+import UpgradePrompt from '@/components/UpgradePrompt';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   HiOutlinePlus, HiOutlineEye, HiOutlinePencilSquare, HiOutlineTrash,
   HiOutlineLink, HiOutlineEnvelope, HiOutlineCalendarDays,
   HiOutlineUserGroup, HiOutlineCheckCircle, HiOutlineXCircle,
-  HiOutlineSparkles, HiOutlineChatBubbleLeftRight
+  HiOutlineSparkles, HiOutlineChatBubbleLeftRight, HiOutlineArrowUpRight,
+  HiOutlineQrCode
 } from 'react-icons/hi2';
 import { FaWhatsapp } from 'react-icons/fa';
 
@@ -24,8 +28,61 @@ const fadeUp = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.4 } }),
 };
 
+// ─── Animated Counter ────────────────────────────────────────
+function AnimatedCounter({ value, duration = 1.2 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (value === 0) { setDisplay(0); return; }
+    const steps = 30;
+    const increment = value / steps;
+    let current = 0;
+    const interval = setInterval(() => {
+      current += increment;
+      if (current >= value) {
+        setDisplay(value);
+        clearInterval(interval);
+      } else {
+        setDisplay(Math.floor(current));
+      }
+    }, (duration * 1000) / steps);
+    return () => clearInterval(interval);
+  }, [value, duration]);
+  return <>{display}</>;
+}
+
+// ─── Mini Pie Chart (SVG) ────────────────────────────────────
+function MiniPieChart({ attending, declined, size = 60 }: { attending: number; declined: number; size?: number }) {
+  const total = attending + declined;
+  if (total === 0) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" />
+      </svg>
+    );
+  }
+  const ratio = attending / total;
+  const circumference = 2 * Math.PI * 40;
+  const attendingArc = circumference * ratio;
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+      <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,107,107,0.3)" strokeWidth="12" />
+      <motion.circle
+        cx="50" cy="50" r="40" fill="none"
+        stroke="#40c057"
+        strokeWidth="12"
+        strokeDasharray={`${attendingArc} ${circumference}`}
+        strokeLinecap="round"
+        initial={{ strokeDasharray: `0 ${circumference}` }}
+        animate={{ strokeDasharray: `${attendingArc} ${circumference}` }}
+        transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
+      />
+    </svg>
+  );
+}
+
 export default function DashboardPage() {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { isPremium } = useFeatureGate();
   const router = useRouter();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -34,6 +91,8 @@ export default function DashboardPage() {
   const [rsvpModal, setRsvpModal] = useState<string | null>(null);
   const [rsvps, setRsvps] = useState<any[]>([]);
   const [rsvpStats, setRsvpStats] = useState<any>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [qrCardId, setQrCardId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -93,16 +152,19 @@ export default function DashboardPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '40px', height: '40px', border: '3px solid rgba(92,124,250,0.2)', borderTopColor: '#5c7cfa', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+            style={{ width: '44px', height: '44px', border: '3px solid rgba(92,124,250,0.2)', borderTopColor: '#5c7cfa', borderRadius: '50%', margin: '0 auto 1rem' }}
+          />
           <p style={{ color: '#868e96' }}>Loading your dashboard...</p>
-          <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
   }
 
   const statCards = [
-    { label: 'Total Invitations', value: stats?.totalInvitations || 0, icon: <HiOutlineEnvelope />, color: '#5c7cfa' },
+    { label: 'Invitations', value: stats?.totalInvitations || 0, icon: <HiOutlineEnvelope />, color: '#5c7cfa' },
     { label: 'Total RSVPs', value: stats?.totalRsvps || 0, icon: <HiOutlineUserGroup />, color: '#f06595' },
     { label: 'Attending', value: stats?.attendingRsvps || 0, icon: <HiOutlineCheckCircle />, color: '#40c057' },
     { label: 'Declined', value: stats?.declinedRsvps || 0, icon: <HiOutlineXCircle />, color: '#ff6b6b' },
@@ -112,20 +174,70 @@ export default function DashboardPage() {
     <div style={{ minHeight: '100vh' }}>
       <Navbar />
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '5.5rem 1.5rem 3rem' }}>
-        {/* Header */}
+
+        {/* ─── Plan Status Banner ─────────────────────────────── */}
+        {!isPremium && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              marginBottom: '1.5rem',
+              padding: '1rem 1.5rem',
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(217,119,6,0.05))',
+              border: '1px solid rgba(245,158,11,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>👑</span>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fbbf24' }}>You&apos;re on the Free Plan</p>
+                <p style={{ fontSize: '0.8rem', color: '#a08050' }}>Unlock premium templates, music, scratch card & more</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowUpgrade(true)}
+              style={{
+                padding: '0.6rem 1.5rem',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: '#1a1508',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'all 0.3s',
+              }}
+            >
+              ✨ Upgrade to Premium — ₹29
+            </button>
+          </motion.div>
+        )}
+
+        {/* ─── Header ──────────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
           <div>
             <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>
               Welcome back, <span className="gradient-text">{user?.name?.split(' ')[0]}</span>
+              {isPremium && <span style={{ marginLeft: '0.5rem', fontSize: '1rem', verticalAlign: 'super' }}>👑</span>}
             </h1>
-            <p style={{ color: '#868e96' }}>Manage your invitations and track RSVPs</p>
+            <p style={{ color: '#868e96' }}>
+              Manage your invitations and track RSVPs
+              {isPremium && <span style={{ color: '#fbbf24', marginLeft: '0.5rem', fontSize: '0.8rem', fontWeight: 600 }}>• Premium</span>}
+            </p>
           </div>
           <Link href="/create" className="btn-primary" style={{ gap: '0.5rem' }}>
             <HiOutlinePlus /> Create Invitation
           </Link>
         </motion.div>
 
-        {/* Stats */}
+        {/* ─── Stats + Analytics Row ───────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
           {statCards.map((s, i) => (
             <motion.div key={i} custom={i} variants={fadeUp} initial="hidden" animate="visible" className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -133,14 +245,57 @@ export default function DashboardPage() {
                 {s.icon}
               </div>
               <div>
-                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f1f3f5' }}>{s.value}</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f1f3f5' }}>
+                  <AnimatedCounter value={s.value} />
+                </p>
                 <p style={{ fontSize: '0.8rem', color: '#868e96' }}>{s.label}</p>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Invitations */}
+        {/* ─── RSVP Analytics Card ─────────────────────────────── */}
+        {stats && (stats.totalRsvps > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="card"
+            style={{ marginBottom: '2.5rem', display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}
+          >
+            <MiniPieChart attending={stats.attendingRsvps} declined={stats.declinedRsvps} size={80} />
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', color: '#f1f3f5' }}>RSVP Overview</h3>
+              <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#40c057' }} />
+                  <span style={{ fontSize: '0.85rem', color: '#adb5bd' }}>
+                    Attending: <strong style={{ color: '#f1f3f5' }}>{stats.attendingRsvps}</strong>
+                    {stats.totalRsvps > 0 && <span style={{ color: '#868e96' }}> ({Math.round(stats.attendingRsvps / stats.totalRsvps * 100)}%)</span>}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff6b6b' }} />
+                  <span style={{ fontSize: '0.85rem', color: '#adb5bd' }}>
+                    Declined: <strong style={{ color: '#f1f3f5' }}>{stats.declinedRsvps}</strong>
+                    {stats.totalRsvps > 0 && <span style={{ color: '#868e96' }}> ({Math.round(stats.declinedRsvps / stats.totalRsvps * 100)}%)</span>}
+                  </span>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div style={{ marginTop: '0.75rem', height: '6px', borderRadius: '3px', background: 'rgba(255,107,107,0.2)', overflow: 'hidden' }}>
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${stats.totalRsvps > 0 ? (stats.attendingRsvps / stats.totalRsvps * 100) : 0}%` }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                  style={{ height: '100%', borderRadius: '3px', background: 'linear-gradient(90deg, #40c057, #69db7c)' }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ─── Invitations ─────────────────────────────────────── */}
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem' }}>Your Invitations</h2>
 
         {invitations.length === 0 ? (
@@ -154,13 +309,17 @@ export default function DashboardPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
             {invitations.map((inv, i) => {
               const template = getTemplateById(inv.templateId);
+              const showQrForThis = qrCardId === inv._id;
               return (
                 <motion.div key={inv._id} custom={i} variants={fadeUp} initial="hidden" animate="visible" className="card" style={{ overflow: 'hidden', padding: 0 }}>
                   {/* Card Header */}
                   <div style={{ height: '100px', background: template?.previewGradient || 'linear-gradient(135deg, #1a1a2e, #2a2a3e)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                     <span style={{ fontSize: '2rem' }}>{template?.icon || '🎉'}</span>
-                    <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem' }}>
+                    <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', display: 'flex', gap: '0.35rem' }}>
                       <span className="badge badge-primary">{template?.category || 'event'}</span>
+                      {inv.userPlan === 'premium' && (
+                        <span className="badge" style={{ background: 'rgba(245,158,11,0.2)', color: '#fbbf24' }}>👑</span>
+                      )}
                     </div>
                   </div>
 
@@ -197,10 +356,30 @@ export default function DashboardPage() {
                       <a href={getWhatsAppShareUrl(inv)} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', color: '#40c057', textDecoration: 'none' }}>
                         <FaWhatsapp />
                       </a>
+                      <button onClick={() => setQrCardId(showQrForThis ? null : inv._id)} className="btn-secondary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}>
+                        <HiOutlineQrCode />
+                      </button>
                       <button onClick={() => setDeleteId(inv._id)} className="btn-secondary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', color: '#ff6b6b', borderColor: 'rgba(255,107,107,0.2)' }}>
                         <HiOutlineTrash />
                       </button>
                     </div>
+
+                    {/* Inline QR Code */}
+                    <AnimatePresence>
+                      {showQrForThis && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          style={{ marginTop: '1rem', textAlign: 'center', overflow: 'hidden' }}
+                        >
+                          <div style={{ display: 'inline-block', padding: '1rem', borderRadius: '16px', background: '#fff' }}>
+                            <QRCodeSVG value={getInviteUrl(inv.slug)} size={140} level="H" />
+                          </div>
+                          <p style={{ fontSize: '0.7rem', color: '#868e96', marginTop: '0.5rem' }}>Scan to open invitation</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </motion.div>
               );
@@ -209,7 +388,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Delete Modal */}
+      {/* ─── Delete Confirmation Modal ─────────────────────────── */}
       {deleteId && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setDeleteId(null)}>
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-strong" style={{ borderRadius: '20px', padding: '2rem', maxWidth: '400px', width: '90%', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
@@ -224,14 +403,15 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* RSVP Modal */}
+      {/* ─── RSVP Details Modal ────────────────────────────────── */}
       {rsvpModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => { setRsvpModal(null); setRsvps([]); setRsvpStats(null); }}>
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-strong" style={{ borderRadius: '20px', padding: '2rem', maxWidth: '520px', width: '90%', maxHeight: '80vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Guest Responses</h3>
 
             {rsvpStats && (
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <MiniPieChart attending={rsvpStats.attending} declined={rsvpStats.declined} size={50} />
                 <span className="badge badge-primary">Total: {rsvpStats.total}</span>
                 <span className="badge badge-success">Attending: {rsvpStats.attending}</span>
                 <span className="badge badge-danger">Declined: {rsvpStats.declined}</span>
@@ -262,6 +442,9 @@ export default function DashboardPage() {
           </motion.div>
         </div>
       )}
+
+      {/* ─── Upgrade Modal ─────────────────────────────────────── */}
+      <UpgradePrompt isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
 }

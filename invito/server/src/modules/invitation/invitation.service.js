@@ -1,5 +1,6 @@
 const Invitation = require('./invitation.model');
 const RSVP = require('../rsvp/rsvp.model');
+const User = require('../user/user.model');
 const generateSlug = require('../../utils/generateSlug');
 
 class InvitationService {
@@ -16,10 +17,14 @@ class InvitationService {
       existing = await Invitation.findOne({ slug });
     }
 
+    // Fetch user's plan
+    const user = await User.findById(userId).select('plan');
+
     const invitation = await Invitation.create({
       ...data,
       userId,
       slug,
+      userPlan: user?.plan || 'free',
     });
 
     return invitation;
@@ -76,7 +81,7 @@ class InvitationService {
     const allowedFields = [
       'title', 'templateId', 'hostName', 'eventDate', 'eventTime',
       'location', 'mapLink', 'description', 'imageUrl',
-      'rsvpEnabled', 'dressCode', 'contactInfo',
+      'rsvpEnabled', 'dressCode', 'contactInfo', 'galleryImages', 'musicUrl',
     ];
 
     allowedFields.forEach((field) => {

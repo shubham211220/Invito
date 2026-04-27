@@ -41,6 +41,28 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    plan: {
+      type: String,
+      enum: ['free', 'premium'],
+      default: 'free',
+    },
+    planExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    paymentId: {
+      type: String,
+      default: null,
+    },
+    orderId: {
+      type: String,
+      default: null,
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
   },
   {
     timestamps: true,

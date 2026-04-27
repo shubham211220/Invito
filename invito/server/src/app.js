@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const env = require('./config/env');
+const cloudinary = require('./config/cloudinary');
 const errorHandler = require('./middleware/errorHandler');
 
 // Import routes
@@ -12,6 +13,9 @@ const authRoutes = require('./modules/auth/auth.routes');
 const invitationRoutes = require('./modules/invitation/invitation.routes');
 const invitationController = require('./modules/invitation/invitation.controller');
 const rsvpRoutes = require('./modules/rsvp/rsvp.routes');
+const userRoutes = require('./modules/user/user.routes');
+const paymentRoutes = require('./modules/payment/payment.routes');
+const adminRoutes = require('./modules/admin/admin.routes');
 const upload = require('./middleware/upload');
 const auth = require('./middleware/auth');
 const ApiResponse = require('./utils/apiResponse');
@@ -65,17 +69,33 @@ app.use('/uploads', express.static(path.join(__dirname, '..', env.UPLOAD_DIR)));
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/invitations', invitationRoutes);
 app.use('/api/rsvp', rsvpRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Public invite route (no auth)
 app.get('/api/invite/:slug', invitationController.getBySlug);
 
 // File upload route
-app.post('/api/upload', auth, upload.single('image'), (req, res) => {
+app.post('/api/upload-image', auth, upload.single('image'), async (req, res) => {
   if (!req.file) {
     return ApiResponse.error(res, 'No file uploaded.', 400);
   }
-  const imageUrl = `/uploads/${req.file.filename}`;
-  return ApiResponse.success(res, { imageUrl }, 'File uploaded successfully!');
+  try {
+    const b64 = Buffer.from(req.file.buffer).toString('base64');
+    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+    
+    const result = await cloudinary.uploader.upload(dataURI, {
+      folder: 'invito',
+      resource_type: 'image',
+      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+    });
+    
+    return ApiResponse.success(res, { imageUrl: result.secure_url }, 'Image uploaded successfully!');
+  } catch (err) {
+    console.error('Cloudinary upload error:', err);
+    return ApiResponse.error(res, 'Image upload failed. Please try again.', 500);
+  }
 });
 
 // ─── Health Check ─────────────────────────────────────────────
@@ -96,3 +116,4 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 module.exports = app;
+// Triggering nodemon restart to load .env variables

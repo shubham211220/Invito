@@ -3,10 +3,15 @@ export interface User {
   _id: string;
   name: string;
   email: string;
+  plan: 'free' | 'premium';
+  role?: 'user' | 'admin';
   avatar?: string;
   provider?: 'email' | 'google';
   profileImage?: string;
   googleId?: string;
+  planExpiresAt?: string;
+  paymentId?: string;
+  orderId?: string;
   createdAt: string;
 }
 
@@ -49,6 +54,9 @@ export interface Invitation {
   dressCode?: string;
   contactInfo?: string;
   rsvpCount?: number;
+  userPlan?: 'free' | 'premium';
+  galleryImages?: string[];
+  musicUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -108,6 +116,7 @@ export interface Template {
   previewGradient: string;
   fontFamily: string;
   icon: string;
+  isPremium: boolean;
 }
 
 export type TemplateCategory = 'wedding' | 'birthday' | 'engagement' | 'party' | 'corporate';

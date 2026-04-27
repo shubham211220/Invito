@@ -1,20 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, use } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import api from '@/lib/api';
 import { Invitation } from '@/types';
-import { formatDate, formatTime, getInviteUrl, copyToClipboard, getWhatsAppShareUrl } from '@/lib/utils';
+import { formatDate, formatTime, getInviteUrl, copyToClipboard, getWhatsAppShareUrl, getTwitterShareUrl, getEmailShareUrl, nativeShare } from '@/lib/utils';
 import { getTemplateById } from '@/data/templates';
 import toast, { Toaster } from 'react-hot-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   HiOutlineCalendarDays, HiOutlineMapPin,
   HiOutlineEnvelope, HiOutlineLink, HiOutlineSparkles,
-  HiOutlinePhone
+  HiOutlinePhone, HiOutlineShare, HiOutlinePhoto, HiOutlineChevronLeft, HiOutlineChevronRight
 } from 'react-icons/hi2';
-import { FaWhatsapp } from 'react-icons/fa';
+import { FaWhatsapp, FaXTwitter } from 'react-icons/fa6';
 
 // Premium components
 import ScratchCardReveal from '@/components/invitation/ScratchCardReveal';
@@ -98,6 +98,7 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
   const [isRevealed, setIsRevealed] = useState(false);
   const confettiRef = useRef<ConfettiRef>(null);
   const musicRef = useRef<MusicPlayerRef>(null);
+  const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
 
   const fetchInvitation = useCallback(async () => {
     try {
@@ -118,14 +119,17 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
   const template = invitation ? getTemplateById(invitation.templateId) : null;
   const inviteUrl = invitation ? getInviteUrl(invitation.slug) : '';
   const isSerif = template?.fontFamily === 'Playfair Display';
+  const isPremiumInvite = invitation?.userPlan === 'premium';
 
   // ─── Synced Reveal: fires music + confetti at the exact same moment ───
   const handleReveal = useCallback(() => {
     // Fire confetti fireworks immediately
     confettiRef.current?.fire('fireworks');
     // Start music with fade-in (scratch = user gesture, so play() is allowed)
-    musicRef.current?.startPlayback();
-  }, []);
+    if (isPremiumInvite) {
+      musicRef.current?.startPlayback();
+    }
+  }, [isPremiumInvite]);
 
   const handleTransitionComplete = useCallback(() => {
     setIsRevealed(true);
@@ -165,6 +169,7 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
   // ─── Gallery images ─────────────────────────────────────
   const galleryImages: string[] = [];
   if (invitation.imageUrl) {
+    // Cloudinary URLs are already absolute; fallback for legacy local paths
     const src = invitation.imageUrl.startsWith('http')
       ? invitation.imageUrl
       : `${process.env.NEXT_PUBLIC_API_URL}${invitation.imageUrl}`;
@@ -195,8 +200,16 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
         {/* Floating Particles */}
         <FloatingParticles type={style.particleType} color={style.accent} count={20} />
 
-        {/* Music Player — hidden during scratch, shown after reveal */}
-        <MusicPlayer ref={musicRef} accentColor={style.accent} hidden={!isRevealed} />
+        {/* Music Player — only for premium invitations */}
+        {isPremiumInvite && (
+          <MusicPlayer 
+            ref={musicRef} 
+            accentColor={style.accent} 
+            hidden={!isRevealed} 
+            trackUrl={invitation.musicUrl} 
+            category={template?.category} 
+          />
+        )}
 
         {/* Decorative Orbs */}
         <div style={{ position: 'absolute', width: '500px', height: '500px', borderRadius: '50%', background: `radial-gradient(circle, ${style.accent}12, transparent 70%)`, top: '-5%', right: '-15%', animation: 'float 8s ease-in-out infinite', zIndex: 0 }} />
@@ -487,6 +500,65 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
           )}
 
           {/* ═══════════════════════════════════════════════════
+              GALLERY (Premium)
+             ═══════════════════════════════════════════════════ */}
+          {isPremiumInvite && invitation.galleryImages && invitation.galleryImages.length > 0 && (
+            <AnimatedSection animation="fade-up" style={{ marginBottom: '4rem', textAlign: 'center' }}>
+              <p style={{ fontSize: '0.8rem', color: style.muted, marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 600 }}>
+                <HiOutlinePhoto style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'text-bottom' }} /> Event Gallery
+              </p>
+              <div style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', border: `1px solid ${style.accent}25`, background: style.cardBg }}>
+                <div style={{ position: 'relative', height: '400px', width: '100%' }}>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentGalleryIndex}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.4 }}
+                      style={{ position: 'absolute', inset: 0 }}
+                    >
+                      <Image 
+                        src={invitation.galleryImages[currentGalleryIndex]} 
+                        alt={`Gallery image ${currentGalleryIndex + 1}`}
+                        fill
+                        style={{ objectFit: 'cover' }}
+                        unoptimized
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                  
+                  {invitation.galleryImages.length > 1 && (
+                    <>
+                      <button 
+                        onClick={() => setCurrentGalleryIndex(prev => prev === 0 ? invitation.galleryImages!.length - 1 : prev - 1)}
+                        style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, backdropFilter: 'blur(4px)' }}
+                      >
+                        <HiOutlineChevronLeft size={24} />
+                      </button>
+                      <button 
+                        onClick={() => setCurrentGalleryIndex(prev => (prev + 1) % invitation.galleryImages!.length)}
+                        style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, backdropFilter: 'blur(4px)' }}
+                      >
+                        <HiOutlineChevronRight size={24} />
+                      </button>
+                      <div style={{ position: 'absolute', bottom: '1rem', left: '0', right: '0', display: 'flex', justifyContent: 'center', gap: '0.5rem', zIndex: 2 }}>
+                        {invitation.galleryImages.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setCurrentGalleryIndex(i)}
+                            style={{ width: '8px', height: '8px', borderRadius: '50%', background: currentGalleryIndex === i ? '#fff' : 'rgba(255,255,255,0.4)', border: 'none', cursor: 'pointer', padding: 0 }}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* ═══════════════════════════════════════════════════
               SHARE & QR
              ═══════════════════════════════════════════════════ */}
           <AnimatedSection animation="fade-up" style={{ marginBottom: '3rem', textAlign: 'center' }}>
@@ -494,6 +566,21 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
               Share this Invitation
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {typeof navigator !== 'undefined' && !!navigator.share && (
+                <motion.button
+                  whileHover={{ scale: 1.05, boxShadow: `0 0 20px ${style.accent}20` }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={async () => { await nativeShare(invitation); }}
+                  style={{
+                    padding: '0.7rem 1.25rem', borderRadius: '12px', border: `1px solid ${style.accent}25`,
+                    background: `${style.accent}08`, color: style.text, cursor: 'pointer', fontSize: '0.85rem',
+                    fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'inherit',
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  <HiOutlineShare /> Share
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ scale: 1.05, boxShadow: `0 0 20px ${style.accent}20` }}
                 whileTap={{ scale: 0.95 }}
@@ -505,7 +592,7 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
                   transition: 'all 0.3s',
                 }}
               >
-                <HiOutlineLink /> Copy Link
+                <HiOutlineLink /> Copy
               </motion.button>
               <motion.a
                 whileHover={{ scale: 1.05 }}
@@ -520,6 +607,31 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
               >
                 <FaWhatsapp /> WhatsApp
               </motion.a>
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href={getTwitterShareUrl(invitation)}
+                target="_blank" rel="noopener noreferrer"
+                style={{
+                  padding: '0.7rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'rgba(255,255,255,0.05)', color: '#fff', textDecoration: 'none', fontSize: '0.85rem',
+                  fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem',
+                }}
+              >
+                <FaXTwitter /> X
+              </motion.a>
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href={getEmailShareUrl(invitation)}
+                style={{
+                  padding: '0.7rem 1.25rem', borderRadius: '12px', border: `1px solid ${style.accent}25`,
+                  background: `${style.accent}08`, color: style.text, textDecoration: 'none', fontSize: '0.85rem',
+                  fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem',
+                }}
+              >
+                <HiOutlineEnvelope /> Email
+              </motion.a>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -530,13 +642,13 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
                   fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'inherit',
                 }}
               >
-                📱 QR Code
+                📱 QR
               </motion.button>
             </div>
 
             {showQR && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: '1.5rem', display: 'inline-block', padding: '1.5rem', borderRadius: '20px', background: '#fff', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-                <QRCodeSVG value={inviteUrl} size={180} level="H" />
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: '1.5rem', display: 'inline-block', padding: '1.5rem', borderRadius: '20px', background: '#fff', boxShadow: `0 20px 60px ${style.accent}40` }}>
+                <QRCodeSVG value={inviteUrl} size={180} level="H" fgColor={style.accent} />
                 <p style={{ color: '#333', fontSize: '0.75rem', marginTop: '0.75rem' }}>Scan to open invitation</p>
               </motion.div>
             )}
@@ -559,20 +671,43 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
             <p style={{ fontSize: '0.75rem', color: style.muted }}>
               Created with <span style={{ color: style.accent }}>♥</span> using Invito
             </p>
+            {!isPremiumInvite && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.5rem 1.25rem',
+                borderRadius: '100px',
+                background: `${style.accent}10`,
+                border: `1px solid ${style.accent}20`,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: style.accent,
+                letterSpacing: '0.05em',
+              }}>
+                ✨ Made with Invito — Create your own free invitation
+              </div>
+            )}
           </motion.div>
         </div>
       </div>
     </>
   );
 
-  // ─── Wrap with Scratch Card ─────────────────────────────
-  return (
-    <ScratchCardReveal
-      accentColor={style.accent}
-      onReveal={handleReveal}
-      onTransitionComplete={handleTransitionComplete}
-    >
-      {InvitationContent}
-    </ScratchCardReveal>
-  );
+  // ─── Wrap with Scratch Card (premium only) ─────────────
+  if (isPremiumInvite) {
+    return (
+      <ScratchCardReveal
+        accentColor={style.accent}
+        onReveal={handleReveal}
+        onTransitionComplete={handleTransitionComplete}
+      >
+        {InvitationContent}
+      </ScratchCardReveal>
+    );
+  }
+
+  // Free plan — show invitation directly (no scratch card)
+  return InvitationContent;
 }

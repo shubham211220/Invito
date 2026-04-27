@@ -10,6 +10,7 @@ export const templates: Template[] = [
     previewGradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
     fontFamily: 'Playfair Display',
     icon: '💍',
+    isPremium: false,
   },
   {
     id: 'wedding-floral',
@@ -20,6 +21,7 @@ export const templates: Template[] = [
     previewGradient: 'linear-gradient(135deg, #2d1b2e 0%, #4a2040 50%, #6b2d5b 100%)',
     fontFamily: 'Playfair Display',
     icon: '🌸',
+    isPremium: true,
   },
   {
     id: 'birthday-fun',
@@ -30,6 +32,7 @@ export const templates: Template[] = [
     previewGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     fontFamily: 'DM Sans',
     icon: '🎂',
+    isPremium: false,
   },
   {
     id: 'birthday-minimal',
@@ -40,6 +43,7 @@ export const templates: Template[] = [
     previewGradient: 'linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #2a2a3e 100%)',
     fontFamily: 'Inter',
     icon: '🎈',
+    isPremium: false,
   },
   {
     id: 'engagement-gold',
@@ -50,6 +54,7 @@ export const templates: Template[] = [
     previewGradient: 'linear-gradient(135deg, #1a1508 0%, #2a2008 50%, #3a2b08 100%)',
     fontFamily: 'Playfair Display',
     icon: '💎',
+    isPremium: true,
   },
   {
     id: 'party-neon',
@@ -60,6 +65,7 @@ export const templates: Template[] = [
     previewGradient: 'linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #2a0a3e 100%)',
     fontFamily: 'DM Sans',
     icon: '🎆',
+    isPremium: true,
   },
   {
     id: 'corporate-clean',
@@ -70,6 +76,7 @@ export const templates: Template[] = [
     previewGradient: 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)',
     fontFamily: 'Inter',
     icon: '🏢',
+    isPremium: false,
   },
 ];
 

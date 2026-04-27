@@ -67,3 +67,32 @@ export function getWhatsAppShareUrl(invitation: { title: string; slug: string; e
   );
   return `https://wa.me/?text=${message}`;
 }
+
+export function getTwitterShareUrl(invitation: { title: string; slug: string }): string {
+  const url = getInviteUrl(invitation.slug);
+  const text = encodeURIComponent(`🎉 You're Invited to ${invitation.title}!\n\nView the invitation:`);
+  return `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`;
+}
+
+export function getEmailShareUrl(invitation: { title: string; slug: string; eventDate: string; hostName: string }): string {
+  const url = getInviteUrl(invitation.slug);
+  const subject = encodeURIComponent(`You're Invited: ${invitation.title}`);
+  const body = encodeURIComponent(
+    `Hi!\n\nYou're invited to ${invitation.title} hosted by ${invitation.hostName}.\n\n📅 ${formatDate(invitation.eventDate)}\n\nView the invitation and RSVP here:\n${url}\n\nHope to see you there! 🎉`
+  );
+  return `mailto:?subject=${subject}&body=${body}`;
+}
+
+export async function nativeShare(invitation: { title: string; slug: string; eventDate: string }): Promise<boolean> {
+  if (typeof navigator === 'undefined' || !navigator.share) return false;
+  try {
+    await navigator.share({
+      title: `You're Invited: ${invitation.title}`,
+      text: `🎉 ${invitation.title} — ${formatDate(invitation.eventDate)}`,
+      url: getInviteUrl(invitation.slug),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
