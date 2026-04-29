@@ -58,11 +58,12 @@ export default function DemoPrompt() {
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           style={{
             position: 'fixed',
-            bottom: '2rem',
-            right: '2rem',
+            bottom: '1.25rem',
+            right: '1.25rem',
+            left: 'auto',
             zIndex: 1000,
             maxWidth: '360px',
-            width: 'calc(100vw - 2rem)',
+            width: 'calc(100vw - 2.5rem)',
             padding: '1.5rem',
             borderRadius: '20px',
             background: 'linear-gradient(135deg, rgba(15,15,30,0.95), rgba(25,20,40,0.95))',

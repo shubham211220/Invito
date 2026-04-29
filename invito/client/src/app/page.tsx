@@ -242,7 +242,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── Live Demo Invitation Section ──────────────────────── */}
-      <section id="live-demo" style={{ padding: '6rem 1.5rem', position: 'relative' }}>
+      <section id="live-demo" style={{ padding: '4rem 1rem', position: 'relative' }}>
         {/* Background decorative glow */}
         <div style={{
           position: 'absolute',
@@ -290,7 +290,7 @@ export default function HomePage() {
               Experience a Live{' '}
               <span className="gradient-text-gold">Invitation</span>
             </motion.h2>
-            <motion.p custom={2} variants={fadeUp} style={{ color: '#868e96', fontSize: '1.1rem', maxWidth: '550px', margin: '0 auto', lineHeight: 1.7 }}>
+            <motion.p custom={2} variants={fadeUp} style={{ color: '#868e96', fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)', maxWidth: '550px', margin: '0 auto', lineHeight: 1.7, padding: '0 0.5rem' }}>
               See how your invitation will look with animations, music, scratch-to-reveal, and interactive design.
             </motion.p>
           </motion.div>
@@ -304,7 +304,7 @@ export default function HomePage() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '3rem',
+              gap: '2rem',
               flexWrap: 'wrap',
               justifyContent: 'center',
             }}
@@ -340,7 +340,7 @@ export default function HomePage() {
               }} />
 
               {/* Card Content */}
-              <div style={{ padding: '2.5rem 2rem', position: 'relative', zIndex: 2, textAlign: 'center' }}>
+              <div style={{ padding: '2rem 1.5rem', position: 'relative', zIndex: 2, textAlign: 'center' }}>
                 {/* Floating icon */}
                 <motion.div
                   animate={{ y: [0, -8, 0] }}
@@ -445,7 +445,7 @@ export default function HomePage() {
             </motion.div>
 
             {/* CTA Side */}
-            <div style={{ maxWidth: '420px', textAlign: 'center' }}>
+            <div style={{ maxWidth: '420px', width: '100%', textAlign: 'center', padding: '0 0.5rem' }}>
               <motion.div
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}

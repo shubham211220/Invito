@@ -201,24 +201,25 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
           transition={{ delay: 0.5, duration: 0.6 }}
           style={{
             position: 'fixed',
-            top: '1rem',
+            top: '0.75rem',
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 200,
-            padding: '0.5rem 1.5rem',
+            padding: '0.4rem 1.2rem',
             borderRadius: '100px',
             background: 'linear-gradient(135deg, rgba(92,124,250,0.2), rgba(240,101,149,0.2))',
             border: '1px solid rgba(255,255,255,0.15)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            fontSize: '0.8rem',
+            fontSize: 'clamp(0.65rem, 2vw, 0.8rem)',
             fontWeight: 700,
             letterSpacing: '0.08em',
             color: '#f1f3f5',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
+            gap: '0.4rem',
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            whiteSpace: 'nowrap',
           }}
         >
           <HiOutlineSparkles style={{ fontSize: '1rem', color: '#748ffc' }} />
@@ -611,8 +612,8 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
             /* ─── Post-Demo Conversion CTA ───────────────────── */
             <AnimatedSection animation="fade-up" style={{ marginBottom: '3rem', textAlign: 'center' }}>
               <div style={{
-                padding: '3rem 2rem',
-                borderRadius: '28px',
+                padding: 'clamp(2rem, 5vw, 3rem) clamp(1.25rem, 4vw, 2rem)',
+                borderRadius: '24px',
                 background: 'linear-gradient(135deg, rgba(92,124,250,0.1), rgba(240,101,149,0.1))',
                 border: '1px solid rgba(255,255,255,0.1)',
                 position: 'relative',
