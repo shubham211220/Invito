@@ -1,12 +1,18 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import DemoPrompt from '@/components/layout/DemoPrompt';
 import { templates } from '@/data/templates';
-import { HiOutlineSparkles, HiOutlinePaintBrush, HiOutlineLink, HiOutlineClipboardDocumentCheck, HiOutlineShare } from 'react-icons/hi2';
+import { DEMO_SLUG } from '@/data/demoInvitation';
+import {
+  HiOutlineSparkles, HiOutlinePaintBrush, HiOutlineLink,
+  HiOutlineClipboardDocumentCheck, HiOutlineShare,
+  HiOutlineEye, HiOutlineMusicalNote, HiOutlineCalendarDays, HiOutlineMapPin,
+} from 'react-icons/hi2';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -235,6 +241,297 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── Live Demo Invitation Section ──────────────────────── */}
+      <section id="live-demo" style={{ padding: '6rem 1.5rem', position: 'relative' }}>
+        {/* Background decorative glow */}
+        <div style={{
+          position: 'absolute',
+          top: '20%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '600px',
+          height: '600px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(212,165,116,0.06), transparent 60%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-100px' }}
+            style={{ textAlign: 'center', marginBottom: '3.5rem' }}
+          >
+            <motion.div
+              custom={0}
+              variants={fadeUp}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.4rem 1rem',
+                borderRadius: '100px',
+                background: 'rgba(212,165,116,0.1)',
+                border: '1px solid rgba(212,165,116,0.2)',
+                color: '#d4a574',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                marginBottom: '1.25rem',
+              }}
+            >
+              <HiOutlineEye /> Live Preview
+            </motion.div>
+            <motion.h2
+              custom={1}
+              variants={fadeUp}
+              style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, marginBottom: '1rem', letterSpacing: '-0.02em' }}
+            >
+              Experience a Live{' '}
+              <span className="gradient-text-gold">Invitation</span>
+            </motion.h2>
+            <motion.p custom={2} variants={fadeUp} style={{ color: '#868e96', fontSize: '1.1rem', maxWidth: '550px', margin: '0 auto', lineHeight: 1.7 }}>
+              See how your invitation will look with animations, music, scratch-to-reveal, and interactive design.
+            </motion.p>
+          </motion.div>
+
+          {/* Demo Preview Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3rem',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            {/* Preview Card */}
+            <motion.div
+              whileHover={{
+                y: -8,
+                boxShadow: '0 30px 80px rgba(212,165,116,0.15), 0 0 60px rgba(212,165,116,0.08)',
+              }}
+              style={{
+                width: '380px',
+                maxWidth: '100%',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                background: 'linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%)',
+                border: '1px solid rgba(212,165,116,0.15)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+                transition: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                position: 'relative',
+              }}
+            >
+              {/* Gradient overlay at top */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '120px',
+                background: 'radial-gradient(ellipse at 50% 0%, rgba(212,165,116,0.12), transparent 70%)',
+                pointerEvents: 'none',
+                zIndex: 1,
+              }} />
+
+              {/* Card Content */}
+              <div style={{ padding: '2.5rem 2rem', position: 'relative', zIndex: 2, textAlign: 'center' }}>
+                {/* Floating icon */}
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{
+                    fontSize: '3rem',
+                    marginBottom: '1.25rem',
+                    filter: 'drop-shadow(0 0 30px rgba(212,165,116,0.4))',
+                  }}
+                >
+                  💍
+                </motion.div>
+
+                {/* Label */}
+                <p style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.25em',
+                  color: '#d4a574',
+                  marginBottom: '0.75rem',
+                }}>
+                  You&apos;re Invited
+                </p>
+
+                {/* Title */}
+                <h3 style={{
+                  fontSize: '1.6rem',
+                  fontWeight: 800,
+                  color: '#f5f0eb',
+                  marginBottom: '0.5rem',
+                  fontFamily: 'var(--font-display), Georgia, serif',
+                  lineHeight: 1.2,
+                }}>
+                  Rahul & Sneha
+                </h3>
+                <p style={{ color: '#a09080', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                  Hosted by The Sharma Family
+                </p>
+
+                {/* Separator */}
+                <div style={{
+                  width: '50px',
+                  height: '1.5px',
+                  background: 'linear-gradient(90deg, transparent, #d4a574, transparent)',
+                  margin: '0 auto 1.5rem',
+                }} />
+
+                {/* Event Details */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#c0b0a0', fontSize: '0.85rem' }}>
+                    <HiOutlineCalendarDays style={{ color: '#d4a574', fontSize: '1rem' }} />
+                    25 December 2026 · 6:00 PM
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#c0b0a0', fontSize: '0.85rem' }}>
+                    <HiOutlineMapPin style={{ color: '#d4a574', fontSize: '1rem' }} />
+                    Taj Lands End, Mumbai
+                  </div>
+                </div>
+
+                {/* Feature pills */}
+                <div style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  justifyContent: 'center',
+                  flexWrap: 'wrap',
+                  marginTop: '1.5rem',
+                }}>
+                  {[
+                    { icon: '✨', label: 'Scratch Reveal' },
+                    { icon: '🎵', label: 'Music' },
+                    { icon: '🎆', label: 'Animations' },
+                  ].map((pill) => (
+                    <span
+                      key={pill.label}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        padding: '0.3rem 0.7rem',
+                        borderRadius: '100px',
+                        background: 'rgba(212,165,116,0.08)',
+                        border: '1px solid rgba(212,165,116,0.15)',
+                        color: '#d4a574',
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {pill.icon} {pill.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bottom shimmer bar */}
+              <div style={{
+                height: '3px',
+                background: 'linear-gradient(90deg, transparent, #d4a574, transparent)',
+                backgroundSize: '400% 100%',
+                animation: 'shimmer 3s ease-in-out infinite',
+              }} />
+            </motion.div>
+
+            {/* CTA Side */}
+            <div style={{ maxWidth: '420px', textAlign: 'center' }}>
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3, duration: 0.7 }}
+              >
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  alignItems: 'center',
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                  }}>
+                    {[
+                      { icon: <HiOutlineMusicalNote />, text: 'Background music that sets the mood' },
+                      { icon: <HiOutlineSparkles />, text: 'Scratch-to-reveal interactive experience' },
+                      { icon: <HiOutlineEye />, text: 'Premium animations & floating particles' },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 15 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.4 + i * 0.1 }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.6rem',
+                          padding: '0.75rem 1rem',
+                          borderRadius: '12px',
+                          background: 'rgba(255,255,255,0.03)',
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          fontSize: '0.85rem',
+                          color: '#adb5bd',
+                          width: '100%',
+                        }}
+                      >
+                        <span style={{ color: '#d4a574', fontSize: '1.1rem', flexShrink: 0 }}>{item.icon}</span>
+                        {item.text}
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <motion.div
+                    whileHover={{ scale: 1.05, boxShadow: '0 0 50px rgba(212,165,116,0.3)' }}
+                    whileTap={{ scale: 0.97 }}
+                    style={{ marginTop: '0.5rem' }}
+                  >
+                    <Link
+                      href={`/invite/${DEMO_SLUG}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.6rem',
+                        padding: '1rem 2.5rem',
+                        borderRadius: '14px',
+                        background: 'linear-gradient(135deg, #d4a574, #c49060)',
+                        color: '#0a0a0f',
+                        fontWeight: 700,
+                        fontSize: '1.05rem',
+                        textDecoration: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        boxShadow: '0 8px 30px rgba(212,165,116,0.25)',
+                      }}
+                    >
+                      <HiOutlineEye />
+                      View Live Demo
+                    </Link>
+                  </motion.div>
+                  <p style={{ fontSize: '0.8rem', color: '#5c5c70', marginTop: '0.25rem' }}>
+                    No signup needed · Full interactive experience
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ─── Templates Preview ─────────────────────────────────── */}
       <section id="templates" style={{ padding: '6rem 1.5rem' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
@@ -398,6 +695,7 @@ export default function HomePage() {
       </section>
 
       <Footer />
+      <DemoPrompt />
     </div>
   );
 }

@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useCallback, useRef, use } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 import api from '@/lib/api';
 import { Invitation } from '@/types';
 import { formatDate, formatTime, getInviteUrl, copyToClipboard, getWhatsAppShareUrl, getTwitterShareUrl, getEmailShareUrl, nativeShare } from '@/lib/utils';
 import { getTemplateById } from '@/data/templates';
+import { DEMO_SLUG, demoInvitation } from '@/data/demoInvitation';
 import toast, { Toaster } from 'react-hot-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -100,7 +102,15 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
   const musicRef = useRef<MusicPlayerRef>(null);
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
 
+  const isDemo = slug === DEMO_SLUG;
+
   const fetchInvitation = useCallback(async () => {
+    // Intercept demo slug — use hardcoded data, no API call
+    if (slug === DEMO_SLUG) {
+      setInvitation(demoInvitation);
+      setLoading(false);
+      return;
+    }
     try {
       const res = await api.get(`/invite/${slug}`);
       setInvitation(res.data.data.invitation);
@@ -182,6 +192,39 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
       <Toaster position="top-center" toastOptions={{
         style: { background: '#1a1a2e', color: '#f1f3f5', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' },
       }} />
+
+      {/* ─── Demo Badge ─────────────────────────────────────── */}
+      {isDemo && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          style={{
+            position: 'fixed',
+            top: '1rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 200,
+            padding: '0.5rem 1.5rem',
+            borderRadius: '100px',
+            background: 'linear-gradient(135deg, rgba(92,124,250,0.2), rgba(240,101,149,0.2))',
+            border: '1px solid rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            color: '#f1f3f5',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          }}
+        >
+          <HiOutlineSparkles style={{ fontSize: '1rem', color: '#748ffc' }} />
+          Demo Invitation
+        </motion.div>
+      )}
       <ConfettiEffect ref={confettiRef} accentColor={style.accent} />
 
       <div style={{
@@ -468,7 +511,7 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
           {/* ═══════════════════════════════════════════════════
               RSVP
              ═══════════════════════════════════════════════════ */}
-          {invitation.rsvpEnabled && (
+          {invitation.rsvpEnabled && !isDemo && (
             <AnimatedSection animation="fade-up" style={{ marginBottom: '3rem', textAlign: 'center' }}>
               <p style={{
                 fontSize: '0.8rem',
@@ -561,16 +604,116 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
           {/* ═══════════════════════════════════════════════════
               SHARE & QR
              ═══════════════════════════════════════════════════ */}
-          <AnimatedSection animation="fade-up" style={{ marginBottom: '3rem', textAlign: 'center' }}>
-            <p style={{ fontSize: '0.8rem', color: style.muted, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 600 }}>
-              Share this Invitation
-            </p>
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              {typeof navigator !== 'undefined' && !!navigator.share && (
+          {/* ═══════════════════════════════════════════════════
+              SHARE & QR (hidden for demo) / CONVERSION CTA (demo only)
+             ═══════════════════════════════════════════════════ */}
+          {isDemo ? (
+            /* ─── Post-Demo Conversion CTA ───────────────────── */
+            <AnimatedSection animation="fade-up" style={{ marginBottom: '3rem', textAlign: 'center' }}>
+              <div style={{
+                padding: '3rem 2rem',
+                borderRadius: '28px',
+                background: 'linear-gradient(135deg, rgba(92,124,250,0.1), rgba(240,101,149,0.1))',
+                border: '1px solid rgba(255,255,255,0.1)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}>
+                {/* Decorative glow */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-40%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '300px',
+                  height: '300px',
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${style.accent}18, transparent 60%)`,
+                  pointerEvents: 'none',
+                }} />
+
+                <motion.div
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ type: 'spring', bounce: 0.5 }}
+                  style={{ fontSize: '2.5rem', marginBottom: '1rem', position: 'relative' }}
+                >
+                  💖
+                </motion.div>
+                <h2 style={{
+                  fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+                  fontWeight: 800,
+                  marginBottom: '0.75rem',
+                  position: 'relative',
+                  fontFamily: isSerif ? 'var(--font-display)' : 'inherit',
+                }}>
+                  Loved this design?
+                </h2>
+                <p style={{
+                  color: style.muted,
+                  fontSize: '1rem',
+                  maxWidth: '400px',
+                  margin: '0 auto 2rem',
+                  lineHeight: 1.7,
+                  position: 'relative',
+                }}>
+                  Create your own stunning invitation in minutes — completely free.
+                </p>
+                <motion.div
+                  whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(76,110,245,0.4)' }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{ position: 'relative', display: 'inline-block' }}
+                >
+                  <Link
+                    href="/create"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '1rem 2.5rem',
+                      borderRadius: '14px',
+                      background: 'linear-gradient(135deg, #4c6ef5, #7c3aed)',
+                      color: '#fff',
+                      fontWeight: 700,
+                      fontSize: '1.05rem',
+                      textDecoration: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s',
+                    }}
+                  >
+                    <HiOutlineSparkles />
+                    Create Your Invitation
+                  </Link>
+                </motion.div>
+              </div>
+            </AnimatedSection>
+          ) : (
+            /* ─── Regular Share & QR Section ─────────────────── */
+            <AnimatedSection animation="fade-up" style={{ marginBottom: '3rem', textAlign: 'center' }}>
+              <p style={{ fontSize: '0.8rem', color: style.muted, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 600 }}>
+                Share this Invitation
+              </p>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                {typeof navigator !== 'undefined' && !!navigator.share && (
+                  <motion.button
+                    whileHover={{ scale: 1.05, boxShadow: `0 0 20px ${style.accent}20` }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={async () => { await nativeShare(invitation); }}
+                    style={{
+                      padding: '0.7rem 1.25rem', borderRadius: '12px', border: `1px solid ${style.accent}25`,
+                      background: `${style.accent}08`, color: style.text, cursor: 'pointer', fontSize: '0.85rem',
+                      fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'inherit',
+                      transition: 'all 0.3s',
+                    }}
+                  >
+                    <HiOutlineShare /> Share
+                  </motion.button>
+                )}
                 <motion.button
                   whileHover={{ scale: 1.05, boxShadow: `0 0 20px ${style.accent}20` }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={async () => { await nativeShare(invitation); }}
+                  onClick={async () => { const ok = await copyToClipboard(inviteUrl); if (ok) toast.success('Link copied!'); }}
                   style={{
                     padding: '0.7rem 1.25rem', borderRadius: '12px', border: `1px solid ${style.accent}25`,
                     background: `${style.accent}08`, color: style.text, cursor: 'pointer', fontSize: '0.85rem',
@@ -578,81 +721,68 @@ export default function PublicInvitePage({ params }: { params: Promise<{ slug: s
                     transition: 'all 0.3s',
                   }}
                 >
-                  <HiOutlineShare /> Share
+                  <HiOutlineLink /> Copy
                 </motion.button>
-              )}
-              <motion.button
-                whileHover={{ scale: 1.05, boxShadow: `0 0 20px ${style.accent}20` }}
-                whileTap={{ scale: 0.95 }}
-                onClick={async () => { const ok = await copyToClipboard(inviteUrl); if (ok) toast.success('Link copied!'); }}
-                style={{
-                  padding: '0.7rem 1.25rem', borderRadius: '12px', border: `1px solid ${style.accent}25`,
-                  background: `${style.accent}08`, color: style.text, cursor: 'pointer', fontSize: '0.85rem',
-                  fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'inherit',
-                  transition: 'all 0.3s',
-                }}
-              >
-                <HiOutlineLink /> Copy
-              </motion.button>
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                href={getWhatsAppShareUrl(invitation)}
-                target="_blank" rel="noopener noreferrer"
-                style={{
-                  padding: '0.7rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(37,211,102,0.3)',
-                  background: 'rgba(37,211,102,0.1)', color: '#25d366', textDecoration: 'none', fontSize: '0.85rem',
-                  fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem',
-                }}
-              >
-                <FaWhatsapp /> WhatsApp
-              </motion.a>
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                href={getTwitterShareUrl(invitation)}
-                target="_blank" rel="noopener noreferrer"
-                style={{
-                  padding: '0.7rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)',
-                  background: 'rgba(255,255,255,0.05)', color: '#fff', textDecoration: 'none', fontSize: '0.85rem',
-                  fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem',
-                }}
-              >
-                <FaXTwitter /> X
-              </motion.a>
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                href={getEmailShareUrl(invitation)}
-                style={{
-                  padding: '0.7rem 1.25rem', borderRadius: '12px', border: `1px solid ${style.accent}25`,
-                  background: `${style.accent}08`, color: style.text, textDecoration: 'none', fontSize: '0.85rem',
-                  fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem',
-                }}
-              >
-                <HiOutlineEnvelope /> Email
-              </motion.a>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowQR(!showQR)}
-                style={{
-                  padding: '0.7rem 1.25rem', borderRadius: '12px', border: `1px solid ${style.accent}25`,
-                  background: `${style.accent}08`, color: style.text, cursor: 'pointer', fontSize: '0.85rem',
-                  fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'inherit',
-                }}
-              >
-                📱 QR
-              </motion.button>
-            </div>
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  href={getWhatsAppShareUrl(invitation)}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{
+                    padding: '0.7rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(37,211,102,0.3)',
+                    background: 'rgba(37,211,102,0.1)', color: '#25d366', textDecoration: 'none', fontSize: '0.85rem',
+                    fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  }}
+                >
+                  <FaWhatsapp /> WhatsApp
+                </motion.a>
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  href={getTwitterShareUrl(invitation)}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{
+                    padding: '0.7rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)',
+                    background: 'rgba(255,255,255,0.05)', color: '#fff', textDecoration: 'none', fontSize: '0.85rem',
+                    fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  }}
+                >
+                  <FaXTwitter /> X
+                </motion.a>
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  href={getEmailShareUrl(invitation)}
+                  style={{
+                    padding: '0.7rem 1.25rem', borderRadius: '12px', border: `1px solid ${style.accent}25`,
+                    background: `${style.accent}08`, color: style.text, textDecoration: 'none', fontSize: '0.85rem',
+                    fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  }}
+                >
+                  <HiOutlineEnvelope /> Email
+                </motion.a>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowQR(!showQR)}
+                  style={{
+                    padding: '0.7rem 1.25rem', borderRadius: '12px', border: `1px solid ${style.accent}25`,
+                    background: `${style.accent}08`, color: style.text, cursor: 'pointer', fontSize: '0.85rem',
+                    fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'inherit',
+                  }}
+                >
+                  📱 QR
+                </motion.button>
+              </div>
 
-            {showQR && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: '1.5rem', display: 'inline-block', padding: '1.5rem', borderRadius: '20px', background: '#fff', boxShadow: `0 20px 60px ${style.accent}40` }}>
-                <QRCodeSVG value={inviteUrl} size={180} level="H" fgColor={style.accent} />
-                <p style={{ color: '#333', fontSize: '0.75rem', marginTop: '0.75rem' }}>Scan to open invitation</p>
-              </motion.div>
-            )}
-          </AnimatedSection>
+              {showQR && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: '1.5rem', display: 'inline-block', padding: '1.5rem', borderRadius: '20px', background: '#fff', boxShadow: `0 20px 60px ${style.accent}40` }}>
+                  <QRCodeSVG value={inviteUrl} size={180} level="H" fgColor={style.accent} />
+                  <p style={{ color: '#333', fontSize: '0.75rem', marginTop: '0.75rem' }}>Scan to open invitation</p>
+                </motion.div>
+              )}
+            </AnimatedSection>
+          )}
 
           {/* ═══════════════════════════════════════════════════
               FOOTER
